@@ -1,0 +1,29 @@
+{
+  "name": "torn-thread-notifier",
+  "version": "1.0.0",
+  "description": "Chrome extension to monitor Torn forum threads and notify on new posts",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "package": "npm run build && node scripts/package.js"
+  },
+  "keywords": [
+    "chrome-extension",
+    "torn",
+    "forum",
+    "notifications"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/chrome": "^0.0.268",
+    "@types/node": "^20.12.7",
+    "typescript": "^5.4.5",
+    "vite": "^5.2.10"
+  },
+  "dependencies": {
+    "archiver": "^7.0.1"
+  }
+}

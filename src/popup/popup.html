@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Torn Thread Notifier</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <h1 class="title">Torn Thread Notifier</h1>
+      <button class="settings-btn" id="settingsBtn" aria-label="Settings">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M10 12.5C11.3807 12.5 12.5 11.3807 12.5 10C12.5 8.61929 11.3807 7.5 10 7.5C8.61929 7.5 7.5 8.61929 7.5 10C7.5 11.3807 8.61929 12.5 10 12.5Z" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M16.25 10C16.25 10.625 16.375 11.125 16.75 11.5L17.5 12.25C17.625 12.375 17.75 12.625 17.75 12.875C17.75 13.125 17.625 13.375 17.5 13.5L13.5 17.5C13.375 17.625 13.125 17.75 12.875 17.75C12.625 17.75 12.375 17.625 12.25 17.5L11.5 16.75C11.125 16.375 10.625 16.25 10 16.25C9.375 16.25 8.875 16.375 8.5 16.75L7.75 17.5C7.625 17.625 7.375 17.75 7.125 17.75C6.875 17.75 6.625 17.625 6.5 17.5L2.5 13.5C2.375 13.375 2.25 13.125 2.25 12.875C2.25 12.625 2.375 12.375 2.5 12.25L3.25 11.5C3.625 11.125 3.75 10.625 3.75 10C3.75 9.375 3.625 8.875 3.25 8.5L2.5 7.75C2.375 7.625 2.25 7.375 2.25 7.125C2.25 6.875 2.375 6.625 2.5 6.5L6.5 2.5C6.625 2.375 6.875 2.25 7.125 2.25C7.375 2.25 7.625 2.375 7.75 2.5L8.5 3.25C8.875 3.625 9.375 3.75 10 3.75C10.625 3.75 11.125 3.625 11.5 3.25L12.25 2.5C12.375 2.375 12.625 2.25 12.875 2.25C13.125 2.25 13.375 2.375 13.5 2.5L17.5 6.5C17.625 6.625 17.75 6.875 17.75 7.125C17.75 7.375 17.625 7.625 17.5 7.75L16.75 8.5C16.375 8.875 16.25 9.375 16.25 10Z" stroke="currentColor" stroke-width="1.5"/>
+        </svg>
+      </button>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content" id="mainContent">
+      <!-- Thread List Header -->
+      <div class="thread-list-header hidden" id="threadListHeader">
+        <div class="thread-list-header-left">
+          <h3 class="thread-list-title">Monitored Threads</h3>
+          <div class="sort-toggle" id="sortToggle">
+            <button class="sort-btn active" data-sort="newest" id="sortNewestBtn" title="Sort by newest post">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                <path d="M6 10V2M6 2L3 5M6 2L9 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+            <button class="sort-btn" data-sort="oldest" id="sortOldestBtn" title="Sort by oldest post">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                <path d="M6 2V10M6 10L3 7M6 10L9 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <button class="btn-delete-all" id="deleteAllBtn" aria-label="Delete all threads">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path d="M1 3.5H13M5.5 6V10M8.5 6V10M2.5 3.5L3.5 12C3.5 12.5523 3.94772 13 4.5 13H9.5C10.0523 13 10.5 12.5523 10.5 12L11.5 3.5M5 3.5V2C5 1.44772 5.44772 1 6 1H8C8.55228 1 9 1.44772 9 2V3.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Delete All
+        </button>
+      </div>
+
+      <!-- Thread List -->
+      <div class="thread-list" id="threadList">
+        <div class="empty-state" id="emptyState">
+          <p>No threads being monitored</p>
+          <p class="empty-state-hint">Add a thread or import your subscribed threads to get started</p>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="actions">
+        <button class="btn btn-secondary" id="importBtn">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M8 12V4M8 4L5 7M8 4L11 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M2 12V13C2 14.1046 2.89543 15 4 15H12C13.1046 15 14 14.1046 14 13V12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          Import Subscribed
+        </button>
+        <button class="btn btn-primary" id="addThreadBtn">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M8 3V13M3 8H13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          Add Thread
+        </button>
+      </div>
+
+      <!-- Add Thread Form (hidden by default) -->
+      <div class="add-thread-form hidden" id="addThreadForm">
+        <input
+          type="text"
+          class="input"
+          id="threadUrlInput"
+          placeholder="Paste thread URL here..."
+        />
+        <div class="form-actions">
+          <button class="btn btn-secondary btn-sm" id="cancelAddBtn">Cancel</button>
+          <button class="btn btn-primary btn-sm" id="confirmAddBtn">Add</button>
+        </div>
+        <div class="error-message hidden" id="addThreadError"></div>
+      </div>
+    </main>
+
+    <!-- Settings Modal -->
+    <div class="modal-overlay hidden" id="settingsModal">
+      <div class="modal">
+        <div class="modal-header">
+          <h2>Settings</h2>
+          <button class="modal-close" id="closeModalBtn" aria-label="Close">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <path d="M15 5L5 15M5 5L15 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="modal-content">
+          <!-- API Key Section -->
+          <div class="form-group">
+            <label for="apiKeyInput">Torn API Key</label>
+            <div class="input-with-icon">
+              <input
+                type="text"
+                class="input"
+                id="apiKeyInput"
+                placeholder="Enter your Torn API key..."
+                maxlength="16"
+              />
+              <span class="input-icon hidden" id="apiKeyIcon"></span>
+            </div>
+            <div class="error-message hidden" id="apiKeyError"></div>
+          </div>
+
+          <!-- Check Frequency -->
+          <div class="form-group">
+            <label for="checkFrequencySlider">
+              Check Frequency
+              <span class="label-value" id="checkFrequencyValue">5 minutes</span>
+            </label>
+            <input
+              type="range"
+              class="slider"
+              id="checkFrequencySlider"
+              min="1"
+              max="120"
+              value="5"
+            />
+            <div class="slider-labels">
+              <span>1 min</span>
+              <span>120 min</span>
+            </div>
+          </div>
+
+          <!-- Delay Between Checks -->
+          <div class="form-group">
+            <label for="delaySlider">
+              Delay Between Checks
+              <span class="label-value" id="delayValue">0.5 seconds</span>
+            </label>
+            <input
+              type="range"
+              class="slider"
+              id="delaySlider"
+              min="0.1"
+              max="3.0"
+              step="0.1"
+              value="0.5"
+            />
+            <div class="slider-labels">
+              <span>0.1s</span>
+              <span>3.0s</span>
+            </div>
+          </div>
+
+          <!-- Restart Behavior -->
+          <div class="form-group">
+            <label for="restartBehaviorToggle" class="tooltip-label">
+              Restart Behavior
+              <span class="info-icon" title="Continue: Resume monitoring from last known post counts&#10;Fresh Start: Reset to current post counts if more than 1 hour has passed since last check&#10;&#10;Background monitoring continues even when browser is closed (unless you quit from system tray)">ⓘ</span>
+            </label>
+            <div class="toggle-group">
+              <button class="toggle-btn active" data-value="continue" id="continueBtn">Continue</button>
+              <button class="toggle-btn" data-value="fresh" id="freshBtn">Fresh Start</button>
+            </div>
+          </div>
+
+          <!-- API Usage Stats -->
+          <div class="api-stats" id="apiStats">
+            <div class="stats-label">Estimated API Usage</div>
+            <div class="stats-value" id="statsValue">0 requests/min</div>
+            <div class="stats-warning hidden" id="statsWarning"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="popup.ts" type="module"></script>
+</body>
+</html>
