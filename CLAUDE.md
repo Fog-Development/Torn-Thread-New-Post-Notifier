@@ -343,9 +343,15 @@ Example: 10 threads checked every 5 minutes = 2 req/min
 
 **Manifest Differences**:
 - Firefox uses `background.scripts` array instead of `service_worker`
-- Does NOT support `"type": "module"` in background configuration
+- MUST include `"type": "module"` in background configuration for ES module support
 - Requires `browser_specific_settings.gecko.id` for submission
 - Minimum Firefox version set to 121.0
+
+**Event Page Behavior**:
+- Firefox Event Pages show as "Stopped" when idle - this is normal
+- Background script wakes automatically for alarms, notifications, and messages
+- All event listeners use non-async pattern with internal async IIFE to ensure proper registration
+- `onStartup` listener reinitializes alarms after browser restarts
 
 **Temporary Add-ons**:
 - Temporary add-ons in Firefox are removed on browser restart
@@ -353,7 +359,8 @@ Example: 10 threads checked every 5 minutes = 2 req/min
 - Production users: install from Firefox Add-ons once approved
 
 **Add-ons Validation**:
-- Do NOT include `data_collection_permissions` field (omit entirely)
+- MUST include `data_collection_permissions` field (required as of Nov 3rd, 2025)
+  - Set to `{"required": ["none"]}` if not collecting data
 - Background script must use scripts array format
 - All other Manifest v3 features supported
 

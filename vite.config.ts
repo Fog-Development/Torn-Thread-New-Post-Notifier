@@ -20,6 +20,7 @@ export default defineConfig(() => {
           'service-worker': resolve(__dirname, 'src/background/service-worker.ts')
         },
         output: {
+          format: 'es',
           entryFileNames: (chunkInfo) => {
             if (chunkInfo.name === 'service-worker') {
               return 'service-worker.js';
