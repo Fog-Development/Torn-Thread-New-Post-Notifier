@@ -1,3 +1,4 @@
+import browser from 'webextension-polyfill';
 import { getSettings, updateApiKey, updateCheckFrequency, updateDelay, updateRestartBehavior } from '../../lib/storage/settings-store.js';
 import { validateApiKey } from '../../lib/api/endpoints.js';
 import { isValidApiKey } from '../../lib/utils/validators.js';
@@ -114,7 +115,7 @@ async function validateAndSaveApiKey(apiKey: string): Promise<void> {
     updateApiKeyValidation(true);
 
     // Notify background to update alarm
-    chrome.runtime.sendMessage({ type: 'update-alarm' });
+    browser.runtime.sendMessage({ type: 'update-alarm' });
   } else {
     await updateApiKey(apiKey, false, result.error);
     updateApiKeyValidation(false, result.error);
@@ -158,7 +159,7 @@ async function handleCheckFrequencyChange(e: Event): Promise<void> {
   await updateApiUsageStats();
 
   // Notify background to update alarm
-  chrome.runtime.sendMessage({ type: 'update-alarm' });
+  browser.runtime.sendMessage({ type: 'update-alarm' });
 }
 
 async function handleDelayChange(e: Event): Promise<void> {

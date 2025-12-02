@@ -1,11 +1,12 @@
+import browser from 'webextension-polyfill';
 import { MonitoredThread } from '../models/thread.js';
 
 const THREADS_KEY = 'monitored_threads';
 
 export async function getThreads(): Promise<MonitoredThread[]> {
   try {
-    const result = await chrome.storage.local.get(THREADS_KEY);
-    return result[THREADS_KEY] || [];
+    const result = await browser.storage.local.get(THREADS_KEY);
+    return (result[THREADS_KEY] as MonitoredThread[]) || [];
   } catch (error) {
     console.error('Error loading threads:', error);
     return [];
@@ -72,7 +73,7 @@ export async function resetThreadCounts(): Promise<void> {
 
 async function saveThreads(threads: MonitoredThread[]): Promise<void> {
   try {
-    await chrome.storage.local.set({ [THREADS_KEY]: threads });
+    await browser.storage.local.set({ [THREADS_KEY]: threads });
   } catch (error) {
     console.error('Error saving threads:', error);
     // Check if quota exceeded

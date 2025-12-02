@@ -1,9 +1,10 @@
 # Torn Thread Notifier
 
-A Chrome extension that monitors Torn forum threads and sends browser notifications when new posts are detected.
+A cross-browser extension for **Chrome** and **Firefox** that monitors Torn forum threads and sends browser notifications when new posts are detected.
 
 ## Features
 
+- **Cross-Browser Support**: Works on both Chrome and Firefox
 - **Thread Monitoring**: Track specific Torn forum threads for new posts
 - **Smart Notifications**: Get notified instantly when new posts appear
 - **Import Subscribed Threads**: Automatically import threads you're subscribed to in Torn
@@ -15,13 +16,30 @@ A Chrome extension that monitors Torn forum threads and sends browser notificati
 
 ## Installation
 
-### From Release (Recommended)
+### Chrome
 
-1. Download the latest `torn-thread-notifier-X.X.X.zip` from the [Releases](https://github.com/YOUR_USERNAME/Torn-Thread-New-Post-Notifier/releases) page
+#### From Chrome Web Store (Coming Soon)
+_Extension pending review_
+
+#### Manual Installation
+1. Download the latest `torn-thread-notifier-chrome-X.X.X.zip` from the [Releases](https://github.com/YOUR_USERNAME/Torn-Thread-New-Post-Notifier/releases) page
 2. Unzip the file
 3. Open Chrome and navigate to `chrome://extensions/`
 4. Enable "Developer mode" (toggle in top-right)
 5. Click "Load unpacked" and select the unzipped folder
+
+### Firefox
+
+#### From Firefox Add-ons (Coming Soon)
+_Extension pending review_
+
+#### Manual Installation
+1. Download the latest `torn-thread-notifier-firefox-X.X.X.zip` from the [Releases](https://github.com/YOUR_USERNAME/Torn-Thread-New-Post-Notifier/releases) page
+2. Open Firefox and navigate to `about:debugging#/runtime/this-firefox`
+3. Click "Load Temporary Add-on"
+4. Select the downloaded `.zip` file or the `manifest.json` from the unzipped folder
+
+**Note:** Temporary add-ons in Firefox are removed when the browser restarts. For permanent installation, install from Firefox Add-ons once available.
 
 ### From Source
 
@@ -38,14 +56,26 @@ A Chrome extension that monitors Torn forum threads and sends browser notificati
 
 3. Build the extension:
    ```bash
+   # Build both browsers
    npm run build
+
+   # Or build specific browser
+   npm run build:chrome
+   npm run build:firefox
    ```
 
-4. Load the extension in Chrome:
+4. Load the extension:
+
+   **Chrome:**
    - Open `chrome://extensions/`
    - Enable "Developer mode"
    - Click "Load unpacked"
-   - Select the `dist/` folder
+   - Select the `dist-chrome/` folder
+
+   **Firefox:**
+   - Open `about:debugging#/runtime/this-firefox`
+   - Click "Load Temporary Add-on"
+   - Select any file in the `dist-firefox/` folder
 
 ## Setup
 
@@ -126,16 +156,30 @@ Time to wait between checking each thread in a cycle. Higher values reduce API u
 
 ```bash
 npm install      # Install dependencies
-npm run dev      # Start development server with hot reload
+npm run dev      # Start development server with hot reload (Chrome by default)
 ```
 
-Load the extension from the `dist/` folder in Chrome.
+**Chrome:**
+- Load the extension from the `dist-chrome/` folder via `chrome://extensions/`
+
+**Firefox:**
+- Build Firefox version first: `npm run build:firefox`
+- Load from `dist-firefox/` via `about:debugging#/runtime/this-firefox`
 
 ### Build for Production
 
 ```bash
-npm run build    # Compile and build
-npm run package  # Create distributable .zip file
+# Build both browsers
+npm run build
+
+# Build specific browser
+npm run build:chrome
+npm run build:firefox
+
+# Package for distribution
+npm run package           # Creates both Chrome and Firefox .zip files
+npm run package:chrome    # Chrome only
+npm run package:firefox   # Firefox only
 ```
 
 ### Project Structure
@@ -145,8 +189,9 @@ See [CLAUDE.md](CLAUDE.md) for comprehensive technical documentation.
 ## Technologies
 
 - **TypeScript**: Type-safe development
-- **Vite**: Fast build system
-- **Chrome Manifest v3**: Latest extension standard
+- **Vite**: Fast build system with browser-specific builds
+- **Manifest v3**: Latest extension standard (Chrome & Firefox)
+- **webextension-polyfill**: Cross-browser API compatibility layer
 - **Torn API v2**: Official Torn API
 - **Vanilla HTML/CSS/JS**: No framework dependencies
 
@@ -169,9 +214,14 @@ This extension is not affiliated with, endorsed by, or connected to Torn City or
 ## Troubleshooting
 
 **Extension won't load**:
-- Ensure you've built the extension (`npm run build`)
-- Check Chrome's developer console for errors
-- Verify manifest.json is present in dist/
+- Ensure you've built the extension for the correct browser (`npm run build:chrome` or `npm run build:firefox`)
+- Check browser's developer console for errors
+- Verify manifest.json is present in `dist-chrome/` or `dist-firefox/`
+
+**Firefox temporary add-on removed after restart**:
+- This is expected behavior for temporary add-ons in Firefox
+- For permanent installation, wait for Firefox Add-ons approval
+- Alternatively, rebuild and reload after each Firefox restart
 
 **API key not validating**:
 - Key must be exactly 16 alphanumeric characters
@@ -179,9 +229,10 @@ This extension is not affiliated with, endorsed by, or connected to Torn City or
 - Check your internet connection
 
 **Notifications not appearing**:
-- Enable notifications for Chrome in your system settings
+- Enable notifications in your system settings (for Chrome or Firefox)
 - Check notification permissions for the extension
 - Ensure threads have new posts to notify about
+- **Firefox**: Check that the background script is running in `about:debugging`
 
 **High API usage warnings**:
 - Reduce number of monitored threads

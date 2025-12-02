@@ -1,10 +1,11 @@
+import browser from 'webextension-polyfill';
 import { initializeAlarm, handleAlarmTrigger } from './alarm-manager.js';
 import { checkAllThreads } from './thread-checker.js';
 import { handleCheckResults, handleNotificationClick } from './notification-manager.js';
 import { getSettings, updateLastCheckTimestamp } from '../lib/storage/settings-store.js';
 
 // Initialize on extension install or update
-chrome.runtime.onInstalled.addListener(async (details) => {
+browser.runtime.onInstalled.addListener(async (details) => {
   console.log('Extension installed/updated:', details.reason);
 
   // Initialize alarm
@@ -20,12 +21,12 @@ chrome.runtime.onInstalled.addListener(async (details) => {
       console.log('Initialized lastCheckTimestamp on first install');
     }
   } else if (details.reason === 'update') {
-    console.log('Extension updated to version:', chrome.runtime.getManifest().version);
+    console.log('Extension updated to version:', browser.runtime.getManifest().version);
   }
 });
 
 // Handle alarm triggers
-chrome.alarms.onAlarm.addListener(async (alarm) => {
+browser.alarms.onAlarm.addListener(async (alarm) => {
   console.log('Alarm triggered:', alarm.name);
 
   // Handle the alarm trigger (restart behavior logic)
@@ -41,13 +42,13 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
 });
 
 // Handle notification clicks
-chrome.notifications.onClicked.addListener(async (notificationId) => {
+browser.notifications.onClicked.addListener(async (notificationId) => {
   console.log('Notification clicked:', notificationId);
   await handleNotificationClick(notificationId);
 });
 
 // Handle messages from popup
-chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+browser.runtime.onMessage.addListener((message: any, _sender, sendResponse) => {
   console.log('Message received:', message);
 
   (async () => {

@@ -45,9 +45,16 @@ export async function checkAllThreads(): Promise<ThreadCheckResult[]> {
 
   for (const thread of threads) {
     try {
+      console.log(`[DEBUG] Checking thread ${thread.id} (${thread.title})`);
+      console.log(`[DEBUG] Stored lastCheckedPosts: ${thread.lastCheckedPosts}, totalPosts: ${thread.totalPosts}`);
+
       const threadDetails = await getThreadDetails(settings.apiKey, thread.id);
       const currentPosts = threadDetails.posts;
       const lastPostTime = threadDetails.last_post_time;
+
+      console.log(`[DEBUG] API returned currentPosts: ${currentPosts} (type: ${typeof currentPosts})`);
+      console.log(`[DEBUG] Comparison: ${currentPosts} > ${thread.lastCheckedPosts} = ${currentPosts > thread.lastCheckedPosts}`);
+
       const hasNewPosts = currentPosts > thread.lastCheckedPosts;
 
       const result: ThreadCheckResult = {

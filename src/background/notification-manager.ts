@@ -1,3 +1,4 @@
+import browser from 'webextension-polyfill';
 import { getThreads, updateThreadLastNotified } from '../lib/storage/threads-store.js';
 import { formatNotificationTitle } from '../lib/utils/formatters.js';
 import { buildThreadUrl } from '../lib/utils/url-parser.js';
@@ -61,9 +62,9 @@ export async function sendNotification(
   url: string,
   data?: NotificationData
 ): Promise<void> {
-  await chrome.notifications.create(id, {
+  await browser.notifications.create(id, {
     type: 'basic',
-    iconUrl: chrome.runtime.getURL('assets/icons/icon-128.png'),
+    iconUrl: browser.runtime.getURL('assets/icons/icon-128.png'),
     title,
     message,
     priority: 1
@@ -71,7 +72,7 @@ export async function sendNotification(
 
   // Store URL for click handling if provided
   if (url || data) {
-    await chrome.storage.local.set({
+    await browser.storage.local.set({
       [`notification-${id}`]: { url, data }
     });
   }
@@ -79,15 +80,15 @@ export async function sendNotification(
 
 export async function handleNotificationClick(notificationId: string): Promise<void> {
   // Get notification data
-  const result = await chrome.storage.local.get(`notification-${notificationId}`);
-  const notificationData = result[`notification-${notificationId}`];
+  const result = await browser.storage.local.get(`notification-${notificationId}`);
+  const notificationData = result[`notification-${notificationId}`] as { url?: string; data?: NotificationData } | undefined;
 
   if (notificationData?.url) {
     // Open URL in new tab
-    await chrome.tabs.create({ url: notificationData.url });
+    await browser.tabs.create({ url: notificationData.url });
   }
 
   // Clear notification
-  await chrome.notifications.clear(notificationId);
-  await chrome.storage.local.remove(`notification-${notificationId}`);
+  await browser.notifications.clear(notificationId);
+  await browser.storage.local.remove(`notification-${notificationId}`);
 }

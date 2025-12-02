@@ -1,10 +1,11 @@
+import browser from 'webextension-polyfill';
 import { ExtensionSettings, DEFAULT_SETTINGS } from '../models/settings.js';
 
 const SETTINGS_KEY = 'extension_settings';
 
 export async function getSettings(): Promise<ExtensionSettings> {
   try {
-    const result = await chrome.storage.sync.get(SETTINGS_KEY);
+    const result = await browser.storage.sync.get(SETTINGS_KEY);
     if (result[SETTINGS_KEY]) {
       return { ...DEFAULT_SETTINGS, ...result[SETTINGS_KEY] };
     }
@@ -17,7 +18,7 @@ export async function getSettings(): Promise<ExtensionSettings> {
 
 export async function saveSettings(settings: ExtensionSettings): Promise<void> {
   try {
-    await chrome.storage.sync.set({ [SETTINGS_KEY]: settings });
+    await browser.storage.sync.set({ [SETTINGS_KEY]: settings });
   } catch (error) {
     console.error('Error saving settings:', error);
     // Check if quota exceeded

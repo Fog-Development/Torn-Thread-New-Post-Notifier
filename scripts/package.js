@@ -3,8 +3,9 @@ import { readdir, stat } from 'fs/promises';
 import { join, relative } from 'path';
 import archiver from 'archiver';
 
-const DIST_DIR = 'dist';
-const OUTPUT_FILE = 'torn-thread-notifier.zip';
+const browser = process.argv[2] || 'chrome';
+const DIST_DIR = `dist-${browser}`;
+const OUTPUT_FILE = `torn-thread-notifier-${browser}.zip`;
 
 async function getAllFiles(dir, fileList = []) {
   const files = await readdir(dir);
@@ -24,7 +25,7 @@ async function getAllFiles(dir, fileList = []) {
 }
 
 async function createZip() {
-  console.log('Creating extension package...');
+  console.log(`Creating ${browser} extension package...`);
 
   const output = createWriteStream(OUTPUT_FILE);
   const archive = archiver('zip', {

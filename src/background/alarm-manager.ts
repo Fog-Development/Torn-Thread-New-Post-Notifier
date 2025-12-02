@@ -1,3 +1,4 @@
+import browser from 'webextension-polyfill';
 import { getSettings, updateLastCheckTimestamp } from '../lib/storage/settings-store.js';
 import { resetThreadCounts } from '../lib/storage/threads-store.js';
 
@@ -11,10 +12,10 @@ export async function initializeAlarm(): Promise<void> {
 
 export async function createAlarm(frequencyMinutes: number): Promise<void> {
   // Clear existing alarm
-  await chrome.alarms.clear(ALARM_NAME);
+  await browser.alarms.clear(ALARM_NAME);
 
   // Create new alarm with specified frequency
-  await chrome.alarms.create(ALARM_NAME, {
+  await browser.alarms.create(ALARM_NAME, {
     delayInMinutes: frequencyMinutes,
     periodInMinutes: frequencyMinutes
   });

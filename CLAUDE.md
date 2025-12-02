@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-**Torn Thread Notifier** is a Chrome Manifest v3 extension that monitors Torn forum threads and sends browser notifications when new posts are detected. The extension allows users to track specific forum threads, configure monitoring intervals, and manage API usage efficiently.
+**Torn Thread Notifier** is a cross-browser Manifest v3 extension for **Chrome** and **Firefox** that monitors Torn forum threads and sends browser notifications when new posts are detected. The extension allows users to track specific forum threads, configure monitoring intervals, and manage API usage efficiently.
 
 ## Purpose
 
@@ -17,11 +17,46 @@ This extension solves the problem of manually checking Torn forum threads for ne
 ### Technology Stack
 
 - **Language**: TypeScript (strict mode)
-- **Build System**: Vite with vite-plugin-web-extension
-- **Chrome Extension**: Manifest v3 (service worker-based)
+- **Build System**: Vite with browser-specific builds (Chrome + Firefox)
+- **Browser Extension**: Manifest v3 (service worker-based)
+- **Cross-Browser Compatibility**: webextension-polyfill
 - **API**: Torn API v2
 - **Styling**: Vanilla CSS with custom modern design
-- **Storage**: Chrome Storage API (sync + local)
+- **Storage**: Browser Storage API (sync + local)
+
+### Cross-Browser Compatibility
+
+The extension supports both Chrome and Firefox through a unified codebase with browser-specific builds.
+
+**webextension-polyfill Integration**:
+- All source code uses `import browser from 'webextension-polyfill'`
+- Provides Promise-based API for both Chrome and Firefox
+- Chrome's `chrome.*` namespace automatically wrapped
+- Firefox's native `browser.*` namespace used directly
+- Type safety via `@types/webextension-polyfill`
+
+**Dual Manifest Strategy**:
+- **manifest-chrome.json**: Chrome-specific configuration
+  - Uses `"service_worker"` with `"type": "module"`
+  - Standard Chrome Manifest v3 format
+
+- **manifest-firefox.json**: Firefox-specific configuration
+  - Uses `"scripts": []` array (no `type` field)
+  - Includes `browser_specific_settings.gecko.id`
+  - Minimum Firefox version: 121.0
+  - Extension ID: `torn-thread-notifier@fog-dev.com`
+
+**Build System**:
+- Environment variable `BROWSER` controls target (chrome/firefox)
+- Separate output directories: `dist-chrome/` and `dist-firefox/`
+- Cross-platform build via `cross-env` package
+- Vite copies correct manifest per browser
+- Package script creates separate `.zip` files
+
+**Browser API Differences Handled**:
+- Background scripts: Chrome uses service_worker, Firefox uses scripts array
+- Type assertions for polyfill return types (TypeScript compatibility)
+- All storage, alarms, notifications, and runtime APIs abstracted
 
 ### Core Components
 
@@ -100,19 +135,22 @@ Location: [src/lib/](src/lib/)
 
 - **settings-store.ts**: Settings persistence
   - Stores API key, validation status, check frequency, delays
-  - Handles chrome.storage.sync quota errors
+  - Handles browser.storage.sync quota errors
   - Provides update helpers for individual settings
+  - Uses webextension-polyfill for cross-browser compatibility
 
 - **threads-store.ts**: Thread data management
   - CRUD operations for monitored threads
   - Duplicate detection
   - Post count updates after each check
   - Reset functionality for fresh starts
+  - Type assertions for polyfill return types
 
 - **error-tracker.ts**: Failure tracking
   - Tracks check results over last 3 cycles
   - Calculates failure rates
   - Enforces 30-minute notification throttle
+  - Uses browser.storage.local abstraction
 
 ##### API ([src/lib/api/](src/lib/api/))
 
@@ -276,18 +314,19 @@ requestsPerMinute = (threadCount / checkFrequencyMinutes)
 
 Example: 10 threads checked every 5 minutes = 2 req/min
 
-## Chrome Manifest v3 Considerations
+## Browser Compatibility & Manifest v3 Considerations
 
 ### Service Worker Lifecycle
-- Service worker can terminate at any time
-- All state stored in chrome.storage (never in memory)
-- chrome.alarms persist across terminations
+- Service worker can terminate at any time (Chrome & Firefox)
+- All state stored in browser.storage (never in memory)
+- browser.alarms persist across terminations
 - All operations designed to be idempotent
 
 ### Storage Limits
-- chrome.storage.sync: 100KB total, 8KB per item
+- browser.storage.sync: 100KB total, 8KB per item
 - Quota exceeded errors handled gracefully
-- Can fall back to chrome.storage.local if needed
+- Can fall back to browser.storage.local if needed
+- Same limits apply to both Chrome and Firefox
 
 ### Permissions Required
 - `storage`: Persist settings and thread data
@@ -296,37 +335,84 @@ Example: 10 threads checked every 5 minutes = 2 req/min
 - `host_permissions`: ["https://www.torn.com/*"] for future features
 
 ### Minimum Alarm Interval
-- Chrome enforces 1-minute minimum
+- Both browsers enforce 1-minute minimum
 - User can select 1-120 minutes
 - UI enforces this limit
+
+### Firefox-Specific Considerations
+
+**Manifest Differences**:
+- Firefox uses `background.scripts` array instead of `service_worker`
+- Does NOT support `"type": "module"` in background configuration
+- Requires `browser_specific_settings.gecko.id` for submission
+- Minimum Firefox version set to 121.0
+
+**Temporary Add-ons**:
+- Temporary add-ons in Firefox are removed on browser restart
+- For development: reload after each restart via `about:debugging`
+- Production users: install from Firefox Add-ons once approved
+
+**Add-ons Validation**:
+- Do NOT include `data_collection_permissions` field (omit entirely)
+- Background script must use scripts array format
+- All other Manifest v3 features supported
 
 ## Build System
 
 ### Development
 ```bash
 npm install    # Install dependencies
-npm run dev    # Start Vite dev server with hot reload
+npm run dev    # Start Vite dev server with hot reload (Chrome by default)
 ```
 
-Load unpacked extension from `dist/` directory in Chrome.
+**Chrome Development**:
+- Load unpacked extension from `dist-chrome/` directory in Chrome
+- Navigate to `chrome://extensions/`, enable Developer mode, click "Load unpacked"
+
+**Firefox Development**:
+- Build Firefox version: `npm run build:firefox`
+- Navigate to `about:debugging#/runtime/this-firefox`
+- Click "Load Temporary Add-on", select any file in `dist-firefox/`
+- Note: Temporary add-ons removed on Firefox restart
 
 ### Production Build
+
+**Build Commands**:
 ```bash
-npm run build    # TypeScript compilation + Vite build
-npm run package  # Creates torn-thread-notifier.zip
+# Build both browsers
+npm run build
+
+# Build specific browser
+npm run build:chrome    # TypeScript + Vite → dist-chrome/
+npm run build:firefox   # TypeScript + Vite → dist-firefox/
+
+# Package for distribution
+npm run package           # Creates both .zip files
+npm run package:chrome    # Chrome only → torn-thread-notifier-chrome.zip
+npm run package:firefox   # Firefox only → torn-thread-notifier-firefox.zip
 ```
+
+**Build Process**:
+1. `BROWSER` environment variable set via cross-env (chrome/firefox)
+2. TypeScript compilation with webextension-polyfill types
+3. Vite builds to `dist-${browser}/` directory
+4. Correct manifest copied: `manifest-${browser}.json` → `manifest.json`
+5. Icons and assets copied to output directory
+6. Package script creates browser-specific `.zip` files
 
 ### CI/CD (GitHub Actions)
 
 Workflow triggers on push to any branch:
 
 1. Install dependencies
-2. Build extension
-3. Package as .zip
+2. Build both Chrome and Firefox versions
+3. Package both as separate `.zip` files
 4. Create GitHub release
    - Master branch → Regular release (v1.0.0)
    - Other branches → Pre-release (v1.0.0-branch-timestamp)
-5. Upload .zip as release asset
+5. Upload both `.zip` files as release assets:
+   - `torn-thread-notifier-chrome-{version}.zip`
+   - `torn-thread-notifier-firefox-{version}.zip`
 
 ## File Structure
 
@@ -347,14 +433,17 @@ src/
 │       └── stats-display.ts
 ├── lib/                  # Shared libraries
 │   ├── api/             # Torn API integration
-│   ├── storage/         # Data persistence
+│   ├── storage/         # Data persistence (webextension-polyfill)
 │   ├── models/          # TypeScript interfaces
 │   └── utils/           # Helper functions
-├── assets/icons/         # Extension icons (placeholders)
-└── manifest.json        # Chrome extension manifest
+├── assets/icons/         # Extension icons
+├── manifest-chrome.json  # Chrome-specific manifest
+└── manifest-firefox.json # Firefox-specific manifest
 
-.github/workflows/        # CI/CD automation
-scripts/                  # Build scripts
+dist-chrome/              # Chrome build output
+dist-firefox/             # Firefox build output
+.github/workflows/        # CI/CD automation (dual builds)
+scripts/                  # Build scripts (browser-aware packaging)
 tests/                    # Testing (future)
 ```
 
@@ -372,27 +461,39 @@ tests/                    # Testing (future)
 - All files use strict TypeScript
 - Import types from `lib/models/`
 - Use `.js` extensions in imports (for ESM compatibility)
+- Use `@types/webextension-polyfill` for browser API types
+- Add type assertions for polyfill return types when needed
+
+### Cross-Browser Development
+
+- **ALWAYS** use `import browser from 'webextension-polyfill'`
+- **NEVER** use `chrome.*` namespace directly
+- Use `browser.storage`, `browser.alarms`, `browser.notifications`, etc.
+- Test in both Chrome and Firefox during development
+- Build both versions before committing: `npm run build`
 
 ### Storage Patterns
 
 - Use provided store modules (settings-store, threads-store)
 - Always handle quota exceeded errors
-- Use chrome.storage.sync for user data
-- Use chrome.storage.local for temporary/large data
+- Use browser.storage.sync for user data
+- Use browser.storage.local for temporary/large data
+- Add type assertions for polyfill results: `(result[key] as Type) || defaultValue`
 
 ## Testing
 
 ### Manual Testing Checklist
 
-See [tests/manual/test-plan.md](tests/manual/test-plan.md) for comprehensive test scenarios:
+Test in **both Chrome and Firefox** for comprehensive validation:
 
 - API key validation
 - Thread import/addition/deletion
-- Background monitoring
-- Notifications
-- Settings persistence
+- Background monitoring (verify service worker runs in both browsers)
+- Notifications (check system permissions per browser)
+- Settings persistence (browser.storage.sync)
 - Error handling
-- Build and deployment
+- Browser-specific builds and packaging
+- Firefox temporary add-on reload after restart
 
 ### Unit Testing (Future Enhancement)
 
@@ -404,11 +505,11 @@ Potential test files in `tests/unit/`:
 
 ## Known Limitations
 
-1. **Minimum Check Frequency**: 1 minute (Chrome alarm limitation)
-2. **Storage Quota**: 100KB for chrome.storage.sync
+1. **Minimum Check Frequency**: 1 minute (browser alarm limitation for both Chrome & Firefox)
+2. **Storage Quota**: 100KB for browser.storage.sync (both browsers)
 3. **API Rate Limits**: Must respect Torn's 100 req/min limit
 4. **Service Worker Lifespan**: Can terminate anytime (design accounts for this)
-5. **Placeholder Icons**: User must replace with actual images
+5. **Firefox Temporary Add-ons**: Removed on browser restart (until approved on Firefox Add-ons)
 
 ## Future Enhancement Possibilities
 
@@ -431,11 +532,14 @@ Potential test files in `tests/unit/`:
 - Ensure key is exactly 16 alphanumeric characters
 - Check key has required permissions (minimal access)
 - Verify internet connection
+- Test in both browsers if dual-deploying
 
 **Notifications Not Appearing**:
-- Check browser notification permissions
+- Check browser notification permissions in system settings
 - Ensure API key is valid
 - Verify check frequency is reasonable (not too infrequent)
+- **Chrome**: Check chrome://extensions/ for errors
+- **Firefox**: Verify background script running in about:debugging
 
 **High API Usage Warnings**:
 - Reduce number of monitored threads
@@ -443,9 +547,21 @@ Potential test files in `tests/unit/`:
 - Increase delay between checks
 
 **Service Worker Not Running**:
-- Check Chrome's extension developer mode
-- View service worker console for errors
+- **Chrome**: Check chrome://extensions/, view service worker console
+- **Firefox**: Check about:debugging#/runtime/this-firefox, inspect background script
 - Restart extension if needed
+- Verify correct manifest for browser
+
+**Firefox Build Errors**:
+- Ensure BROWSER=firefox environment variable set
+- Check manifest-firefox.json has `scripts` array (not service_worker)
+- Verify no `"type": "module"` in background configuration
+- Confirm browser_specific_settings.gecko.id is present
+
+**Firefox Temporary Add-on Removed**:
+- This is expected behavior for temporary add-ons
+- Reload via about:debugging after each Firefox restart
+- For permanent installation, submit to Firefox Add-ons
 
 ## Support and Contribution
 
@@ -453,5 +569,16 @@ For issues or feature requests, please file an issue on the GitHub repository.
 
 ---
 
-**Last Updated**: Initial release v1.0.0
+**Last Updated**: v1.0.0 with Firefox support
 **Maintained By**: Claude Code Assistant
+
+## Changelog
+
+### v1.0.0 - Firefox Support Added
+- Added cross-browser compatibility for Chrome and Firefox
+- Implemented webextension-polyfill for unified browser API
+- Created dual-build system with browser-specific manifests
+- Updated all source code to use `browser.*` namespace
+- Added Firefox-specific manifest configuration
+- Updated CI/CD to build and release both browser versions
+- Updated documentation for cross-browser development
